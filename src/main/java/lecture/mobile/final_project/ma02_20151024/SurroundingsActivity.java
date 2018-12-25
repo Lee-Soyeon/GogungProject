@@ -206,9 +206,17 @@ public class SurroundingsActivity extends AppCompatActivity
                 double latitude = mPosition.latitude;
                 double longitude = mPosition.longitude;
 
-                String url = "daummaps://route?sp=" + curLatitude + "," + curLongitude + "&ep=" + latitude + "," + longitude + "&by=PUBLICTRANSIT";
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                startActivity(intent);
+                try {
+                    String url = "daummaps://route?sp=" + curLatitude + "," + curLongitude + "&ep=" + latitude + "," + longitude + "&by=PUBLICTRANSIT";
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    startActivity(intent);
+                } catch (Exception e) {
+                    Toast.makeText(this, "카카오 맵을 설치한 후 이용해주세요.", Toast.LENGTH_LONG).show();
+
+                    String url = "https://play.google.com/store/apps/details?id=net.daum.android.map&hl=ko";
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    startActivity(intent);
+                }
 
                 break;
         }
