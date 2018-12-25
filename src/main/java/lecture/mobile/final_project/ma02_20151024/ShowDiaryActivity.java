@@ -7,8 +7,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.view.View;
-import android.widget.EditText;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -52,18 +52,27 @@ public class ShowDiaryActivity extends AppCompatActivity {
         helper.close();
     }
 
-    public void onClick(View v) {
-        switch(v.getId()) {
-            case R.id.btnClose:
-                finish();
-                break;
-        }
-    }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
         if (cursor != null) cursor.close();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_share, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.share:
+                //shareKakao();
+                break;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
 }

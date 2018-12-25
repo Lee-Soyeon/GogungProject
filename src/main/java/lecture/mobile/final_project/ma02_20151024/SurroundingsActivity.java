@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
@@ -22,13 +23,10 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.view.WindowManager;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdate;
@@ -59,7 +57,6 @@ public class SurroundingsActivity extends AppCompatActivity
         implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener,
         PlacesListener {
 
     private GoogleApiClient mGoogleApiClient;
@@ -82,6 +79,9 @@ public class SurroundingsActivity extends AppCompatActivity
 
     Intent intent;
     String gungName;
+
+    double curLatitude;
+    double curLongitude;
 
     LocationRequest locationRequest = new LocationRequest()
             .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
@@ -112,6 +112,7 @@ public class SurroundingsActivity extends AppCompatActivity
         intent = getIntent();
         gungName = intent.getStringExtra("gungName");
 
+        // 궁 이름을 받아 지오코딩하여 위치 정보 (위도, 경도) 생성
         geoCoder = new Geocoder(this);
 
         List<Address> addressList = null;
@@ -127,6 +128,40 @@ public class SurroundingsActivity extends AppCompatActivity
 
         for (Address address : addressList) {
             mPosition = new LatLng(address.getLatitude(), address.getLongitude());
+        }
+
+        // 사용자의 현재 위치 확인
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        LocationListener mLocationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                curLatitude = location.getLatitude(); // 위도
+                curLongitude = location.getLongitude(); // 경도
+
+                String provider = location.getProvider();
+            }
+
+            public void onProviderDisabled(String provider) {
+
+            }
+
+            public void onProviderEnabled(String provider) {
+
+            }
+
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+
+            }
+        };
+
+        try {
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+                    100, // 위치 변경 사이의 최소 시간 간격
+                    1, // 위치 변경 사이의 최소 시간 거리
+                    mLocationListener);
+        } catch (SecurityException e) {
+            e.printStackTrace();
         }
 
     }
@@ -168,7 +203,12 @@ public class SurroundingsActivity extends AppCompatActivity
                 break;
 
             case R.id.btnRoute:
+                double latitude = mPosition.latitude;
+                double longitude = mPosition.longitude;
 
+                String url = "daummaps://route?sp=" + curLatitude + "," + curLongitude + "&ep=" + latitude + "," + longitude + "&by=PUBLICTRANSIT";
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                startActivity(intent);
 
                 break;
         }
@@ -208,9 +248,6 @@ public class SurroundingsActivity extends AppCompatActivity
                 return;
             }
 
-
-            Log.d(TAG, "startLocationUpdates : call FusedLocationApi.requestLocationUpdates");
-            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, locationRequest, this);
             mRequestingLocationUpdates = true;
 
             mGoogleMap.setMyLocationEnabled(true);
@@ -218,9 +255,6 @@ public class SurroundingsActivity extends AppCompatActivity
     }
 
     private void stopLocationUpdates() {
-
-        Log.d(TAG,"stopLocationUpdates : LocationServices.FusedLocationApi.removeLocationUpdates");
-        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
         mRequestingLocationUpdates = false;
     }
 
@@ -244,11 +278,6 @@ public class SurroundingsActivity extends AppCompatActivity
                 return true;
             }
         });
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-
     }
 
     @Override
